@@ -1,20 +1,13 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r setwd, echo = FALSE}
-setwd("/Users/chernhanandmichelle/Documents/DataScienceCoursera")
 
-```
 
 ## Loading and preprocessing the data
 
 First, the data is loaded.
 
-```{r loadingdata}
+
+```r
 if(!file.exists("activity.csv")){
     url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
     temp <- tempfile()
@@ -24,7 +17,6 @@ if(!file.exists("activity.csv")){
 }
 
 data <- read.csv("activity.csv")
-
 ```
 
 Next, the data is preprocessed into a format suitable for the analysis.
@@ -34,11 +26,11 @@ Two changes are made:
 * The date variable is transformed into a factor.  
 * Missing observations are omitted.
 
-```{r preprocessdata}
+
+```r
 data <- transform(data, date = as.factor(date))
 
 completeData <- data[!is.na(data$steps), ]
-
 ```
 
 
@@ -46,18 +38,25 @@ completeData <- data[!is.na(data$steps), ]
 
 The total number of steps taken per day are calculated.
 
-```{r totalstepsperday}
+
+```r
 totalStepsPerDay <- aggregate(completeData$steps, by = list(completeData$date), 
                               sum)
 colnames(totalStepsPerDay) <- c("date", "totalSteps")
-
 ```
 
 A histogram of the total number of steps taken each day is generated.
 
-```{r histogram}
-require(ggplot2)
 
+```r
+require(ggplot2)
+```
+
+```
+## Loading required package: ggplot2
+```
+
+```r
 hist <- ggplot(totalStepsPerDay, aes(x = totalSteps))
 hist <- hist + geom_histogram(binwidth = 5000, 
                               color = "black", 
@@ -72,19 +71,20 @@ hist <- hist + theme(plot.title = element_text(size = rel(1.2),
                      axis.title = element_text(size = rel(1)),
                      axis.text = element_text(size = rel(0.9)))
 hist
-
 ```
+
+![](PA1_template_files/figure-html/histogram-1.png) 
 
 The mean and median of the total number of steps taken per day are calculated.
 
-```{r calcmean}
+
+```r
 meanSteps <- as.integer(round(mean(totalStepsPerDay$totalSteps)))
 
 medianSteps <- median(totalStepsPerDay$totalSteps)
-
 ```
 
-The mean is `r meanSteps` steps per day and the median is `r medianSteps` steps 
+The mean is 10766 steps per day and the median is 10765 steps 
 per day.
 
 
@@ -94,7 +94,8 @@ In order to observe the average daily activity pattern, the plot below
 illustrates the average number of steps taken, averaged across all days, for 
 each 5-minute interval.
 
-```{r timeseries}
+
+```r
 intervalSteps <- aggregate(completeData$steps, by = list(completeData$interval), 
                            mean)
 colnames(intervalSteps) <- c("interval", "averageSteps")
@@ -111,52 +112,54 @@ time <- time + theme(plot.title = element_text(size = rel(1.2),
                      axis.title = element_text(size = rel(1)),
                      axis.text = element_text(size = rel(1)))
 time
-
 ```
+
+![](PA1_template_files/figure-html/timeseries-1.png) 
 
 The most active 5-minute interval i.e. the interval with the maximum number of 
 steps is calculated.
 
-```{r maxInterval}
+
+```r
 maxInterval <- intervalSteps$interval[intervalSteps$averageSteps == 
                                           max(intervalSteps$averageSteps)]
-
 ```
 
-The most active 5-minute interval is the `r maxInterval`th interval.
+The most active 5-minute interval is the 835th interval.
 
 ## Imputing missing values
 
 The number of missing values are calculated.
 
-```{r countNA}
-countNA <-  nrow(data[is.na(data$steps), ])
 
+```r
+countNA <-  nrow(data[is.na(data$steps), ])
 ```
 
-There are `r countNA` missing values.  
+There are 2304 missing values.  
 
 These missing values are imputed by assuming they should be the mean number 
 of steps for that 5-minute interval.
 
-```{r imputeNA}
+
+```r
 incompleteData <- data[is.na(data$steps), ]
 incompleteData <- merge(incompleteData, intervalSteps, by = "interval")
 incompleteData$steps <- NULL
 colnames(incompleteData)[3] <- "steps"
-
 ```
 
 The imputed values are reinserted into the dataset.
 
-```{r reinsert}
-fullData <- rbind(completeData, incompleteData)
 
+```r
+fullData <- rbind(completeData, incompleteData)
 ```
 
 For this new dataset, the daily activity is plotted.
 
-```{r repeatAnalysis}
+
+```r
 totalStepsPerDay2 <- aggregate(fullData$steps, by = list(fullData$date), sum)
 colnames(totalStepsPerDay2) <- c("date", "totalSteps")
 
@@ -174,19 +177,20 @@ hist2 <- hist2 + theme(plot.title = element_text(size = rel(1.2),
                        axis.title = element_text(size = rel(1)),
                        axis.text = element_text(size = rel(0.9)))
 hist2
-
 ```
+
+![](PA1_template_files/figure-html/repeatAnalysis-1.png) 
 
 The mean and median of the total number of steps taken each day are determined.
 
-```{r calcmean2}
+
+```r
 meanSteps2 <- as.integer(round(mean(totalStepsPerDay2$totalSteps)))
 
 medianSteps2 <- as.integer(round(median(totalStepsPerDay2$totalSteps)))
-
 ```
 
-The mean is `r meanSteps2` steps per day and the median is `r medianSteps2` 
+The mean is 10766 steps per day and the median is 10766 
 steps per day. 
 
 After the imputation of the missing values with the mean steps of an interval, 
@@ -201,29 +205,35 @@ To evaluate whether there are differences in activity patterns between weekdays
 and weekends, a new factor variable is created to indicate whether a given date 
 is a weekday or weekend day.
 
-```{r daytype}
+
+```r
 fullData <- transform(fullData, date = as.Date(date))
 
 fullData$daytype <- as.factor(sapply(fullData$date, function(x){
     if(weekdays(x) == "Saturday" | weekdays(x) == "Sunday") "weekend" 
     else "weekday"
 }))
-                                                
-
 ```
 
 
 Now it is possible to compare the activity for weekdays vs. weekend 
 days.
 
-```{r daytypeplot}
+
+```r
 intervalSteps2 <- aggregate(fullData$steps, by = list(fullData$interval, 
                                                       fullData$daytype), mean)
 
 colnames(intervalSteps2) <- c("interval", "daytype", "averageSteps")
 
 require(lattice)
+```
 
+```
+## Loading required package: lattice
+```
+
+```r
 xyplot(averageSteps ~ interval | daytype, 
        data = intervalSteps2, 
        type = "l",
@@ -231,8 +241,9 @@ xyplot(averageSteps ~ interval | daytype,
        xlab = "Interval",
        ylab = "Average Number of Steps",
        main = "Comparison of Activity Between Weekends and Weekdays")
-
 ```
+
+![](PA1_template_files/figure-html/daytypeplot-1.png) 
 
 There is generally more activity in the mornings of weekdays as compared to 
 that of weekends, whereas there is less activity in the afternoons of weekdays 
