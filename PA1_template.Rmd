@@ -5,11 +5,6 @@ output:
     keep_md: true
 ---
 
-```{r setwd, echo = FALSE}
-setwd("/Users/chernhanandmichelle/Documents/DataScienceCoursera")
-
-```
-
 ## Loading and preprocessing the data
 
 First, the data is loaded.
